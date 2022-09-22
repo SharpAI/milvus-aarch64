@@ -29,6 +29,7 @@ macro(build_knowhere)
             ${EP_COMMON_CMAKE_ARGS}
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_INSTALL_PREFIX=${KNOWHERE_INSTALL_PREFIX}
+            -DKNOWHERE_WITH_FAISS=OFF
             )
 
     externalproject_add(knowhere_ep
