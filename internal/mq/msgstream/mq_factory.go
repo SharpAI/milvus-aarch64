@@ -23,7 +23,6 @@ import (
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/milvus-io/milvus/internal/log"
 	rmqimplserver "github.com/milvus-io/milvus/internal/mq/mqimpl/rocksmq/server"
-	kafkawrapper "github.com/milvus-io/milvus/internal/mq/msgstream/mqwrapper/kafka"
 	puslarmqwrapper "github.com/milvus-io/milvus/internal/mq/msgstream/mqwrapper/pulsar"
 	rmqwrapper "github.com/milvus-io/milvus/internal/mq/msgstream/mqwrapper/rmq"
 	"github.com/milvus-io/milvus/internal/util/paramtable"
@@ -169,47 +168,6 @@ func NewRmsFactory(path string) *RmsFactory {
 	err := rmqimplserver.InitRocksMQ(path)
 	if err != nil {
 		log.Error("init rmq error", zap.Error(err))
-	}
-	return f
-}
-
-type KmsFactory struct {
-	dispatcherFactory ProtoUDFactory
-	config            *paramtable.KafkaConfig
-	ReceiveBufSize    int64
-}
-
-func (f *KmsFactory) NewMsgStream(ctx context.Context) (MsgStream, error) {
-	kafkaClient := kafkawrapper.NewKafkaClientInstanceWithConfig(f.config)
-	return NewMqMsgStream(ctx, f.ReceiveBufSize, -1, kafkaClient, f.dispatcherFactory.NewUnmarshalDispatcher())
-}
-
-func (f *KmsFactory) NewTtMsgStream(ctx context.Context) (MsgStream, error) {
-	kafkaClient := kafkawrapper.NewKafkaClientInstanceWithConfig(f.config)
-	return NewMqTtMsgStream(ctx, f.ReceiveBufSize, -1, kafkaClient, f.dispatcherFactory.NewUnmarshalDispatcher())
-}
-
-func (f *KmsFactory) NewQueryMsgStream(ctx context.Context) (MsgStream, error) {
-	return f.NewMsgStream(ctx)
-}
-
-func (f *KmsFactory) NewMsgStreamDisposer(ctx context.Context) func([]string, string) error {
-	return func(channels []string, subname string) error {
-		msgstream, err := f.NewMsgStream(ctx)
-		if err != nil {
-			return err
-		}
-		msgstream.AsConsumer(channels, subname)
-		msgstream.Close()
-		return nil
-	}
-}
-
-func NewKmsFactory(config *paramtable.KafkaConfig) Factory {
-	f := &KmsFactory{
-		dispatcherFactory: ProtoUDFactory{},
-		ReceiveBufSize:    1024,
-		config:            config,
 	}
 	return f
 }
