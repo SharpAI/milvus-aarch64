@@ -86,10 +86,6 @@ func (f *DefaultFactory) initMQRemoteService(params *paramtable.ComponentParam) 
 		return msgstream.NewPmsFactory(&params.PulsarCfg)
 	}
 
-	if params.KafkaEnable() {
-		return msgstream.NewKmsFactory(&params.KafkaCfg)
-	}
-
 	return nil
 }
 
